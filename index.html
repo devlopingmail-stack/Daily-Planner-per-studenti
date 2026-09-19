@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Planner per Studenti</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Inter:wght@400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0 30px;
+        }
+
+        header h1 {
+            font-family: 'Patrick Hand', cursive;
+            color: white;
+            font-size: 2.8rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header .date-display {
+            color: rgba(255,255,255,0.85);
+            font-size: 1.1rem;
+            margin-top: 8px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .btn-new-task {
+            background: #fff;
+            color: #764ba2;
+            border: none;
+            padding: 14px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-new-task:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .btn-new-task .plus {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 8px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #764ba2;
+            border-color: white;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.35);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .postit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .postit {
+            background: #fff9a5;
+            border-radius: 3px;
+            padding: 20px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.15), inset 0 0 40px rgba(0,0,0,0.03);
+            position: relative;
+            transform: rotate(var(--rotation));
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9) rotate(var(--rotation)); }
+            to { opacity: 1; transform: scale(1) rotate(var(--rotation)); }
+        }
+
+        .postit:hover {
+            transform: rotate(0deg) scale(1.03);
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.25);
+            z-index: 10;
+        }
+
+        .postit.color-yellow { background: #fff9a5; }
+        .postit.color-pink { background: #ffcccb; }
+        .postit.color-green { background: #c1f0c1; }
+        .postit.color-blue { background: #b3d9ff; }
+        .postit.color-orange { background: #ffd9b3; }
+        .postit.color-purple { background: #e0b3ff; }
+
+        .postit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .postit-title {
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1.3rem;
+            color: #333;
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .postit-subject {
+            font-size: 0.75rem;
+            color: #888;
+            background: rgba(0,0,0,0.06);
+            padding: 3px 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .postit-body {
+            flex: 1;
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.5;
+            word-break: break-word;
+            white-space: pre-wrap;
+            margin-bottom: 15px;
+        }
+
+        .postit-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .postit-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(0.95);
+        }
+
+        .btn-delete {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.85);
+            color: #666;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            cursor: pointer;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+
+        .btn-delete:hover {
+            background: #f44336;
+            color: white;
+            transform: scale(1.15) rotate(90deg);
+            box-shadow: 0 4px 10px rgba(244,67,54,0.4);
+        }
+
+        .btn-delete:active {
+            transform: scale(0.9);
+        }
+
+        .no-tasks {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 1.2rem;
+            margin-top: 60px;
+            font-family: 'Patrick Hand', cursive;
+        }
+
+        .no-tasks .big-emoji {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .day-header {
+            grid-column: 1 / -1;
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1.6rem;
+            color: white;
+            padding: 14px 10px 6px;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            border-bottom: 2px dashed rgba(255,255,255,0.4);
+        }
+
+        .day-header .count {
+            background: rgba(255,255,255,0.25);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 3px 12px;
+            border-radius: 20px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal h2 {
+            font-family: 'Patrick Hand', cursive;
+            color: #764ba2;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .modal label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+            margin-top: 12px;
+        }
+
+        .modal input, .modal textarea, .modal select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .modal input:focus, .modal textarea:focus, .modal select:focus {
+            border-color: #764ba2;
+        }
+
+        .date-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .date-option {
+            flex: 1;
+            padding: 12px 10px;
+            border: 2px solid #e0e0e0;
+            background: #fff;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .date-option:hover {
+            border-color: #764ba2;
+            color: #764ba2;
+        }
+
+        .date-option.active {
+            background: #764ba2;
+            border-color: #764ba2;
+            color: white;
+        }
+
+        .date-display-box {
+            margin-top: 10px;
+            padding: 12px 14px;
+            background: #f3e9ff;
+            border: 2px dashed #764ba2;
+            border-radius: 10px;
+            color: #764ba2;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .modal textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover, .color-option.selected {
+            border-color: #333;
+            transform: scale(1.15);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel {
+            background: #eee;
+            color: #555;
+        }
+
+        .btn-cancel:hover {
+            background: #ddd;
+        }
+
+        .btn-save {
+            background: #764ba2;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #5a3580;
+        }
+
+        .confirm-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1100;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .confirm-overlay.active {
+            display: flex;
+        }
+
+        .confirm-box {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.3s ease;
+        }
+
+        .confirm-box .warn-icon {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .confirm-box p {
+            color: #555;
+            font-size: 1.05rem;
+            margin-bottom: 24px;
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .confirm-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-delete-cancel {
+            background: #eee;
+            color: #555;
+        }
+
+        .btn-delete-cancel:hover {
+            background: #ddd;
+        }
+
+        .btn-delete-confirm {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-delete-confirm:hover {
+            background: #d32f2f;
+        }
+
+        .counter {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            margin-top: 20px;
+            padding-bottom: 30px;
+        }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 2rem; }
+            .postit-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>&#x1F4D6; Daily Planner</h1>
+        <div class="date-display" id="dateDisplay"></div>
+    </header>
+
+    <div class="toolbar">
+        <button class="btn-new-task" onclick="openModal()">
+            <span class="plus">+</span> Nuovo Compito
+        </button>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tomorrow')">Da fare oggi per domani</button>
+        <button class="tab-btn" onclick="switchTab('days')">Da fare per gli altri giorni</button>
+    </div>
+
+    <div class="container">
+        <div class="postit-grid" id="postitGrid"></div>
+        <div class="no-tasks" id="noTasks" style="display:none;">
+            <span class="big-emoji">&#x1F4DD;</span>
+            Nessun compito qui!
+        </div>
+    </div>
+
+    <div class="counter" id="counter"></div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+        <div class="modal">
+            <h2>&#x270F;&#xFE0F; Nuovo Compito</h2>
+
+            <label for="taskTitle">Titolo *</label>
+            <input type="text" id="taskTitle" placeholder="Es: Matematica - Esercizi pag. 45" maxlength="80" onkeydown="if(event.key==='Enter') saveTask()">
+
+            <label for="taskSubject">Materia</label>
+            <input type="text" id="taskSubject" placeholder="Es: Matematica" maxlength="40">
+
+            <label for="taskDescription">Descrizione</label>
+            <textarea id="taskDesc" placeholder="Dettagli del compito..."></textarea>
+
+            <label>Quando devi farlo?</label>
+            <div class="date-options">
+                <button type="button" class="date-option active" onclick="selectDateMode('tomorrow', this)">&#x1F504; Per domani</button>
+                <button type="button" class="date-option" onclick="selectDateMode('calendar', this)">&#x1F4C5; Per gli altri giorni</button>
+            </div>
+            <div class="date-display-box" id="dateDisplayBox">Domani</div>
+            <input type="date" id="taskDate" style="display:none;" onchange="onCalendarChange(this)">
+            <label>Colore Post-it</label>
+            <div class="color-picker" id="colorPicker">
+                <div class="color-option selected" data-color="yellow" style="background:#fff9a5" onclick="selectColor(this)"></div>
+                <div class="color-option" data-color="pink" style="background:#ffcccb" onclick="selectColor(this)"></div>
+                <div class="color-option" data-color="green" style="background:#c1f0c1" onclick="selectColor(this)"></div>
+                <div class="color-option" data-color="blue" style="background:#b3d9ff" onclick="selectColor(this)"></div>
+                <div class="color-option" data-color="orange" style="background:#ffd9b3" onclick="selectColor(this)"></div>
+                <div class="color-option" data-color="purple" style="background:#e0b3ff" onclick="selectColor(this)"></div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Annulla</button>
+                <button class="btn-save" onclick="saveTask()">Salva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conferma eliminazione -->
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-box">
+            <span class="warn-icon">&#x26A0;&#xFE0F;</span>
+            <p>Vuoi eliminare questo post-it?</p>
+            <div class="confirm-actions">
+                <button class="btn-delete-cancel" onclick="closeConfirm()">Annulla</button>
+                <button class="btn-delete-confirm" onclick="confirmDelete()">&#x2715; Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'daily_planner_tasks';
+        const COLORS = ['yellow', 'pink', 'green', 'blue', 'orange', 'purple'];
+        let currentTab = 'tomorrow';
+        let editingId = null;
+        let deleteId = null;
+        let selectedDate = null;
+
+        function getToday() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function getTomorrow() {
+            const d = new Date();
+            d.setDate(d.getDate() + 1);
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function getDayAfterTomorrow() {
+            const d = new Date();
+            d.setDate(d.getDate() + 2);
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return d.toLocaleDateString('it-IT', options);
+        }
+
+        function loadTasks() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (!data) return [];
+            const tasks = JSON.parse(data);
+            return tasks.map(t => ({ ...t, date: t.date || getToday() }));
+        }
+
+        function saveTasks(tasks) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        }
+
+        function getRotation(index) {
+            const rotations = [-2, 1.5, -1, 2, -0.5, 1];
+            return rotations[index % rotations.length];
+        }
+
+        function render() {
+            const tasks = loadTasks();
+            const today = getToday();
+            const tomorrow = getTomorrow();
+            const grid = document.getElementById('postitGrid');
+            const noTasks = document.getElementById('noTasks');
+            const counter = document.getElementById('counter');
+
+            let filtered;
+            const isGrouped = currentTab === 'days';
+            if (currentTab === 'tomorrow') {
+                filtered = tasks.filter(t => t.date === tomorrow);
+            } else {
+                filtered = tasks.filter(t => t.date >= today);
+            }
+
+            // Sort by date: closest deadline first
+            filtered.sort((a, b) => (a.date > b.date ? 1 : -1));
+
+            grid.innerHTML = '';
+            noTasks.style.display = filtered.length === 0 ? 'block' : 'none';
+
+            if (isGrouped && filtered.length > 0) {
+                const groups = {};
+                filtered.forEach(t => {
+                    if (!groups[t.date]) groups[t.date] = [];
+                    groups[t.date].push(t);
+                });
+                const dates = Object.keys(groups).sort();
+                dates.forEach((date, di) => {
+                    const header = document.createElement('div');
+                    header.className = 'day-header';
+                    const diff = Math.round((new Date(date) - new Date(today)) / 86400000);
+                    let label = formatDate(date);
+                    if (diff === 1) label = 'Domani';
+                    else if (diff === 2) label = 'Dopodomani';
+                    header.innerHTML = `&#x1F4C5; ${label} <span class="count">${groups[date].length} compiti</span>`;
+                    grid.appendChild(header);
+                    groups[date].forEach((task, i) => {
+                        grid.appendChild(createPostit(task, di * 10 + i));
+                    });
+                });
+            } else {
+                filtered.forEach((task, i) => grid.appendChild(createPostit(task, i)));
+            }
+
+            counter.textContent = `${filtered.length} compiti in questa vista`;
+        }
+
+        function createPostit(task, i) {
+            const div = document.createElement('div');
+            div.className = `postit color-${task.color}`;
+            div.style.setProperty('--rotation', `${getRotation(i)}deg`);
+
+            const dateBadge = `<div class="postit-subject">&#x1F4C5; ${formatDate(task.date)}</div>`;
+            const subject = task.subject ? `<div class="postit-subject">${task.subject}</div>` : '';
+
+            div.innerHTML = `
+                    <button class="btn-delete" onclick="deleteTask('${task.id}')">&#x2715;</button>
+                    <div class="postit-header">
+                        <div class="postit-title">${escapeHtml(task.title)}</div>
+                    </div>
+                    ${dateBadge}
+                    ${subject}
+                    <div class="postit-body">${escapeHtml(task.description)}</div>
+                `;
+            return div;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function openModal(id) {
+            editingId = id || null;
+            const modal = document.getElementById('modalOverlay');
+            modal.classList.add('active');
+
+            if (editingId) {
+                const task = loadTasks().find(t => t.id === editingId);
+                document.getElementById('taskTitle').value = task.title;
+                document.getElementById('taskSubject').value = task.subject || '';
+                document.getElementById('taskDesc').value = task.description || '';
+                if (task.date === getTomorrow()) {
+                    const btn = document.querySelector('.date-option[onclick*="tomorrow"]');
+                    selectDateMode('tomorrow', btn);
+                } else {
+                    document.getElementById('taskDate').value = task.date;
+                    const btn = document.querySelector('.date-option[onclick*="calendar"]');
+                    selectDateMode('calendar', btn);
+                }
+                selectColorByName(task.color);
+            } else {
+                document.getElementById('taskTitle').value = '';
+                document.getElementById('taskSubject').value = '';
+                document.getElementById('taskDesc').value = '';
+                const btn = document.querySelector('.date-option[onclick*="tomorrow"]');
+                selectDateMode('tomorrow', btn);
+                selectColorByName('yellow');
+            }
+
+            setTimeout(() => document.getElementById('taskTitle').focus(), 100);
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            editingId = null;
+        }
+
+        function closeModalOutside(e) {
+            if (e.target === e.currentTarget) closeModal();
+        }
+
+        function selectDateMode(mode, el) {
+            document.querySelectorAll('.date-option').forEach(b => b.classList.remove('active'));
+            if (el) el.classList.add('active');
+
+            const dateInput = document.getElementById('taskDate');
+            const display = document.getElementById('dateDisplayBox');
+            const dayAfter = getDayAfterTomorrow();
+
+            if (mode === 'tomorrow') {
+                selectedDate = getTomorrow();
+                dateInput.style.display = 'none';
+                display.style.display = 'block';
+                display.textContent = `Domani \u2022 ${formatDate(selectedDate)}`;
+            } else {
+                dateInput.style.display = 'block';
+                dateInput.min = dayAfter;
+                if (!dateInput.value || dateInput.value < dayAfter) dateInput.value = dayAfter;
+                selectedDate = dateInput.value;
+                display.style.display = 'none';
+            }
+        }
+
+        function onCalendarChange(input) {
+            if (input.value < getDayAfterTomorrow()) {
+                input.value = getDayAfterTomorrow();
+            }
+            selectedDate = input.value;
+        }
+
+        function selectColor(el) {
+            document.querySelectorAll('.color-option').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function selectColorByName(name) {
+            document.querySelectorAll('.color-option').forEach(c => {
+                c.classList.toggle('selected', c.dataset.color === name);
+            });
+        }
+
+        function getSelectedColor() {
+            const sel = document.querySelector('.color-option.selected');
+            return sel ? sel.dataset.color : 'yellow';
+        }
+
+        function saveTask() {
+            const title = document.getElementById('taskTitle').value.trim();
+            if (!title) {
+                document.getElementById('taskTitle').style.borderColor = '#e53935';
+                document.getElementById('taskTitle').focus();
+                return;
+            }
+
+            const subject = document.getElementById('taskSubject').value.trim();
+            const description = document.getElementById('taskDesc').value.trim();
+            let date = selectedDate || getTomorrow();
+            if (date < getTomorrow()) date = getTomorrow();
+            const color = getSelectedColor();
+            const tasks = loadTasks();
+
+            if (editingId) {
+                const task = tasks.find(t => t.id === editingId);
+                task.title = title;
+                task.subject = subject;
+                task.description = description;
+                task.date = date;
+                task.color = color;
+            } else {
+                tasks.push({
+                    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                    title,
+                    subject,
+                    description,
+                    color,
+                    date,
+                    createdAt: Date.now()
+                });
+            }
+
+            saveTasks(tasks);
+            closeModal();
+            render();
+        }
+
+        function deleteTask(id) {
+            deleteId = id;
+            document.getElementById('confirmOverlay').classList.add('active');
+        }
+
+        function confirmDelete() {
+            const tasks = loadTasks().filter(t => t.id !== deleteId);
+            saveTasks(tasks);
+            closeConfirm();
+            render();
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirmOverlay').classList.remove('active');
+            deleteId = null;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            cleanupExpired();
+            render();
+        }
+
+        function cleanupExpired() {
+            const tasks = loadTasks();
+            const now = new Date();
+            const remaining = tasks.filter(t => {
+                const expiry = new Date(t.date + 'T08:00:00');
+                return now < expiry;
+            });
+            if (remaining.length !== tasks.length) {
+                saveTasks(remaining);
+                render();
+            }
+        }
+
+        // Init
+        document.getElementById('dateDisplay').textContent = formatDate(getToday());
+        cleanupExpired();
+        render();
+
+        setInterval(cleanupExpired, 30000);
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { closeModal(); closeConfirm(); }
+            if (e.key === 'n' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                openModal();
+            }
+        });
+    </script>
+
+</body>
+</html>
