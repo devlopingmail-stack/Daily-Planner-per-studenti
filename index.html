@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Planner per Studenti</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Inter:wght@400;600&display=swap');
 
@@ -178,6 +179,12 @@
             margin-bottom: 15px;
         }
 
+        .postit-footer {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+
         .postit-btn {
             flex: 1;
             padding: 8px 12px;
@@ -192,6 +199,26 @@
         .postit-btn:hover {
             transform: translateY(-1px);
             filter: brightness(0.95);
+        }
+
+        .postit-defer {
+            background: #ff9800;
+            color: white;
+            margin-top: 8px;
+        }
+
+        .postit-modify {
+            background: #764ba2;
+            color: white;
+            margin-top: 8px;
+        }
+
+        .postit-defer:hover {
+            background: #e68a00;
+        }
+
+        .postit-modify:hover {
+            background: #5a3580;
         }
 
         .btn-delete {
@@ -676,17 +703,17 @@
                     header.innerHTML = `&#x1F4C5; ${label} <span class="count">${groups[date].length} compiti</span>`;
                     grid.appendChild(header);
                     groups[date].forEach((task, i) => {
-                        grid.appendChild(createPostit(task, di * 10 + i));
+                        grid.appendChild(createPostit(task, i, tomorrow));
                     });
                 });
             } else {
-                filtered.forEach((task, i) => grid.appendChild(createPostit(task, i)));
+                filtered.forEach((task, i) => grid.appendChild(createPostit(task, i, tomorrow)));
             }
 
             counter.textContent = `${filtered.length} compiti in questa vista`;
         }
 
-        function createPostit(task, i) {
+        function createPostit(task, i, tomorrow) {
             const div = document.createElement('div');
             div.className = `postit color-${task.color}`;
             div.style.setProperty('--rotation', `${getRotation(i)}deg`);
@@ -702,6 +729,10 @@
                     ${dateBadge}
                     ${subject}
                     <div class="postit-body">${escapeHtml(task.description)}</div>
+                    <div class="postit-footer">
+                        <button class="postit-btn postit-modify" onclick="editTask('${task.id}')">✎ Modifica</button>
+                        <button class="postit-btn postit-defer" onclick="deferTask('${task.id}')">⟳ Rimanda a domani</button>
+                    </div>
                 `;
             return div;
         }
@@ -851,6 +882,44 @@
         function closeConfirm() {
             document.getElementById('confirmOverlay').classList.remove('active');
             deleteId = null;
+        }
+
+        function deferTask(id) {
+            const tasks = loadTasks();
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            // Add 1 day to the task's current date (not today)
+            const d = new Date(task.date + 'T00:00:00');
+            d.setDate(d.getDate() + 1);
+            task.date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            saveTasks(tasks);
+            render();
+        }
+
+        function editTask(id) {
+            const tasks = loadTasks();
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            // Fill the modal with task data
+            document.getElementById('taskTitle').value = task.title;
+            document.getElementById('taskSubject').value = task.subject || '';
+            document.getElementById('taskDesc').value = task.description || '';
+            // Set the date - if task.date is today or tomorrow, show "Per domani", otherwise show calendar
+            const taskDate = task.date || getToday();
+            document.getElementById('taskDate').value = taskDate;
+            // Determine which date option to select
+            const tomorrowStr = getTomorrow();
+            if (taskDate === tomorrowStr) {
+                selectDateMode('tomorrow', document.querySelector('.date-option[onclick*="tomorrow"]'));
+            } else {
+                selectDateMode('calendar', document.querySelector('.date-option[onclick*="calendar"]'));
+                document.getElementById('taskDate').value = taskDate;
+            }
+            editingId = id;
+            const modal = document.getElementById('modalOverlay');
+            modal.classList.add('active');
+            setTimeout(() => document.getElementById('taskTitle').focus(), 100);
         }
 
         function switchTab(tab) {
