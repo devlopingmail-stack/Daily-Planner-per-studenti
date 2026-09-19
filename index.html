@@ -620,10 +620,12 @@
     <script>
         const STORAGE_KEY = 'daily_planner_tasks';
         const COLORS = ['yellow', 'pink', 'green', 'blue', 'orange', 'purple'];
+        const API_BASE = 'https://daily-planner-api.francesco-devloper.workers.dev';
         let currentTab = 'tomorrow';
         let editingId = null;
         let deleteId = null;
         let selectedDate = null;
+        let tasksCache = []; // cache locale per evitare troppe chiamate API
 
         function getToday() {
             const d = new Date();
@@ -648,15 +650,38 @@
             return d.toLocaleDateString('it-IT', options);
         }
 
-        function loadTasks() {
-            const data = localStorage.getItem(STORAGE_KEY);
-            if (!data) return [];
-            const tasks = JSON.parse(data);
-            return tasks.map(t => ({ ...t, date: t.date || getToday() }));
+        async function loadTasks() {
+            try {
+                const res = await fetch(`${API_BASE}/api/tasks`);
+                if (!res.ok) throw new Error('Errore caricamento');
+                const data = await res.json();
+                tasksCache = (data || []).map(t => ({ ...t, date: t.date || getToday() }));
+                return tasksCache;
+            } catch (e) {
+                console.error('loadTasks error:', e);
+                // Fallback a localStorage se l'API fallisce
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (!data) return [];
+                const tasks = JSON.parse(data);
+                tasksCache = tasks.map(t => ({ ...t, date: t.date || getToday() }));
+                return tasksCache;
+            }
         }
 
-        function saveTasks(tasks) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        // Non serve più saveTasks globale - ogni operazione chiama l'API direttamente
+        async function saveTaskToAPI(task) {
+            const res = await fetch(`${API_BASE}/api/tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(task)
+            });
+            if (!res.ok) throw new Error('Errore salvataggio');
+            return res.json();
+        }
+
+        async function deleteTaskFromAPI(id) {
+            const res = await fetch(`${API_BASE}/api/tasks?id=${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Errore eliminazione');
         }
 
         function getRotation(index) {
@@ -664,8 +689,8 @@
             return rotations[index % rotations.length];
         }
 
-        function render() {
-            const tasks = loadTasks();
+        async function render() {
+            const tasks = await loadTasks();
             const today = getToday();
             const tomorrow = getTomorrow();
             const grid = document.getElementById('postitGrid');
@@ -749,7 +774,8 @@
             modal.classList.add('active');
 
             if (editingId) {
-                const task = loadTasks().find(t => t.id === editingId);
+                const task = tasksCache.find(t => t.id === editingId);
+                if (!task) return;
                 document.getElementById('taskTitle').value = task.title;
                 document.getElementById('taskSubject').value = task.subject || '';
                 document.getElementById('taskDesc').value = task.description || '';
@@ -828,7 +854,7 @@
             return sel ? sel.dataset.color : 'yellow';
         }
 
-        function saveTask() {
+        async function saveTask() {
             const title = document.getElementById('taskTitle').value.trim();
             if (!title) {
                 document.getElementById('taskTitle').style.borderColor = '#e53935';
@@ -841,30 +867,28 @@
             let date = selectedDate || getTomorrow();
             if (date < getTomorrow()) date = getTomorrow();
             const color = getSelectedColor();
-            const tasks = loadTasks();
 
-            if (editingId) {
-                const task = tasks.find(t => t.id === editingId);
-                task.title = title;
-                task.subject = subject;
-                task.description = description;
-                task.date = date;
-                task.color = color;
-            } else {
-                tasks.push({
-                    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-                    title,
-                    subject,
-                    description,
-                    color,
-                    date,
-                    createdAt: Date.now()
-                });
+            const taskData = {
+                title,
+                subject,
+                description,
+                date,
+                color,
+                createdAt: Date.now()
+            };
+
+            try {
+                if (editingId) {
+                    // Per aggiornare: eliminiamo il vecchio e creiamo il nuovo (API semplice)
+                    await deleteTaskFromAPI(editingId);
+                }
+                await saveTaskToAPI(taskData);
+                closeModal();
+                await render();
+            } catch (e) {
+                console.error('saveTask error:', e);
+                alert('Errore durante il salvataggio: ' + e.message);
             }
-
-            saveTasks(tasks);
-            closeModal();
-            render();
         }
 
         function deleteTask(id) {
@@ -872,11 +896,15 @@
             document.getElementById('confirmOverlay').classList.add('active');
         }
 
-        function confirmDelete() {
-            const tasks = loadTasks().filter(t => t.id !== deleteId);
-            saveTasks(tasks);
-            closeConfirm();
-            render();
+        async function confirmDelete() {
+            try {
+                await deleteTaskFromAPI(deleteId);
+                closeConfirm();
+                await render();
+            } catch (e) {
+                console.error('confirmDelete error:', e);
+                alert('Errore durante l\'eliminazione: ' + e.message);
+            }
         }
 
         function closeConfirm() {
@@ -884,71 +912,48 @@
             deleteId = null;
         }
 
-        function deferTask(id) {
-            const tasks = loadTasks();
-            const task = tasks.find(t => t.id === id);
-            if (!task) return;
-            // Add 1 day to the task's current date (not today)
-            const d = new Date(task.date + 'T00:00:00');
-            d.setDate(d.getDate() + 1);
-            task.date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-            saveTasks(tasks);
-            render();
-        }
-
-        function editTask(id) {
-            const tasks = loadTasks();
-            const task = tasks.find(t => t.id === id);
-            if (!task) return;
-
-            // Fill the modal with task data
-            document.getElementById('taskTitle').value = task.title;
-            document.getElementById('taskSubject').value = task.subject || '';
-            document.getElementById('taskDesc').value = task.description || '';
-            // Set the date - if task.date is today or tomorrow, show "Per domani", otherwise show calendar
-            const taskDate = task.date || getToday();
-            document.getElementById('taskDate').value = taskDate;
-            // Determine which date option to select
-            const tomorrowStr = getTomorrow();
-            if (taskDate === tomorrowStr) {
-                selectDateMode('tomorrow', document.querySelector('.date-option[onclick*="tomorrow"]'));
-            } else {
-                selectDateMode('calendar', document.querySelector('.date-option[onclick*="calendar"]'));
-                document.getElementById('taskDate').value = taskDate;
-            }
-            editingId = id;
-            const modal = document.getElementById('modalOverlay');
-            modal.classList.add('active');
-            setTimeout(() => document.getElementById('taskTitle').focus(), 100);
-        }
-
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
             cleanupExpired();
-            render();
+            render().catch(e => console.error('switchTab render error:', e));
         }
 
-        function cleanupExpired() {
-            const tasks = loadTasks();
+        async function cleanupExpired() {
+            const tasks = await loadTasks();
             const now = new Date();
             const remaining = tasks.filter(t => {
                 const expiry = new Date(t.date + 'T08:00:00');
                 return now < expiry;
             });
             if (remaining.length !== tasks.length) {
-                saveTasks(remaining);
-                render();
+                // Per D1: eliminiamo uno per uno quelli scaduti
+                for (const task of tasks) {
+                    const expiry = new Date(task.date + 'T08:00:00');
+                    if (now >= expiry) {
+                        try { await deleteTaskFromAPI(task.id); } catch (e) { console.error('cleanup delete error:', e); }
+                    }
+                }
+                await render();
             }
         }
 
         // Init
         document.getElementById('dateDisplay').textContent = formatDate(getToday());
         cleanupExpired();
-        render();
+        (async () => {
+            try {
+                await render();
+            } catch (e) {
+                console.error('Init render error:', e);
+            }
+        })();
 
-        setInterval(cleanupExpired, 30000);
+        setInterval(async () => {
+            cleanupExpired();
+            try { await render(); } catch (e) { console.error('Interval render error:', e); }
+        }, 30000);
 
         // Keyboard shortcut
         document.addEventListener('keydown', e => {
