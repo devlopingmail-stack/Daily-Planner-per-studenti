@@ -1,6 +1,7 @@
 <resources>
     <color name="background">#f8f6ff</color>
     <color name="primary">#764ba2</color>
-    <color name="primary_dark">#5a3580</color>
-    <color name="accent">#667eea</color>
+    <color name="colorPrimary">#764ba2</color>
+    <color name="colorPrimaryDark">#5a3580</color>
+    <color name="colorAccent">#667eea</color>
 </resources>

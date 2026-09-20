@@ -6,10 +6,12 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://maven-central.storage.googleapis.com/' }
+        maven { url 'https://dl.google.com/dl/android/maven2/' }
     }
 }
 rootProject.name = "Daily-Planner"
