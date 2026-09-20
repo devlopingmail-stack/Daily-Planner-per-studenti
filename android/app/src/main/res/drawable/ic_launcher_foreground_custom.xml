@@ -9,66 +9,66 @@
         android:fillColor="#667eea"
         android:pathData="M28,0 L92,0 A28,28 0 0,1 120,28 L120,92 A28,28 0 0,1 92,120 L28,120 A28,28 0 0,1 0,92 L0,28 A28,28 0 0,1 28,0 Z" />
 
-    <!-- Pink Post-it (back) -->
+    <!-- Pink Post-it (back) - smaller, more centered -->
     <path
         android:fillColor="#ffcccb"
-        android:pathData="M22,32 L77,32 A5,5 0 0,1 82,37 L82,87 A5,5 0 0,1 77,92 L22,92 A5,5 0 0,1 17,87 L17,37 A5,5 0 0,1 22,32 Z"
+        android:pathData="M30,40 L80,40 A5,5 0 0,1 85,45 L85,80 A5,5 0 0,1 80,85 L30,85 A5,5 0 0,1 25,80 L25,45 A5,5 0 0,1 30,40 Z"
         android:rotation="-12"
-        android:pivotX="50"
+        android:pivotX="60"
         android:pivotY="60" />
 
-    <!-- Green Post-it (back) -->
+    <!-- Green Post-it (back) - smaller, more centered -->
     <path
         android:fillColor="#c1f0c1"
-        android:pathData="M45,32 L100,32 A5,5 0 0,1 105,37 L105,87 A5,5 0 0,1 100,92 L45,92 A5,5 0 0,1 40,87 L40,37 A5,5 0 0,1 45,32 Z"
+        android:pathData="M50,40 L95,40 A5,5 0 0,1 100,45 L100,80 A5,5 0 0,1 95,85 L50,85 A5,5 0 0,1 45,80 L45,45 A5,5 0 0,1 50,40 Z"
         android:rotation="10"
-        android:pivotX="72"
+        android:pivotX="60"
         android:pivotY="60" />
 
-    <!-- Yellow Main Post-it (front) -->
+    <!-- Yellow Main Post-it (front) - smaller, centered -->
     <group
         android:pivotX="60"
         android:pivotY="60"
         android:rotation="-3">
-        <!-- Main yellow post-it -->
+        <!-- Main yellow post-it - smaller -->
         <path
             android:fillColor="#fff9a5"
-            android:pathData="M32,30 L88,30 A6,6 0 0,1 94,36 L94,88 A6,6 0 0,1 88,94 L32,94 A6,6 0 0,1 26,88 L26,36 A6,6 0 0,1 32,30 Z" />
+            android:pathData="M38,38 L82,38 A6,6 0 0,1 88,44 L88,82 A6,6 0 0,1 82,88 L38,88 A6,6 0 0,1 32,88 L32,44 A6,6 0 0,1 38,38 Z" />
 
-        <!-- Clip/Pin at top -->
+        <!-- Clip/Pin at top - smaller -->
         <path
             android:fillColor="#764ba2"
-            android:pathData="M48,24 C48,21 52,20 60,20 C68,20 72,21 72,24 L70,32 L50,32 Z"
+            android:pathData="M52,28 C52,25 55,22 58,22 C62,22 66,25 66,28 L64,34 L54,34 Z"
             android:alpha="0.85" />
 
-        <!-- Notebook lines -->
+        <!-- Notebook lines - shorter -->
         <path
             android:fillColor="#764ba2"
-            android:pathData="M40,42 L78,42"
-            android:strokeWidth="3"
+            android:pathData="M44,46 L76,46"
+            android:strokeWidth="2.5"
             android:strokeLineCap="round" />
         <path
             android:fillColor="#764ba2"
-            android:pathData="M40,52 L72,52"
-            android:strokeWidth="3"
+            android:pathData="M44,56 L70,56"
+            android:strokeWidth="2.5"
             android:strokeLineCap="round" />
         <path
             android:fillColor="#764ba2"
-            android:pathData="M40,62 L65,62"
-            android:strokeWidth="3"
+            android:pathData="M44,66 L64,66"
+            android:strokeWidth="2.5"
             android:strokeLineCap="round" />
 
-        <!-- Pencil/Checkmark circle -->
+        <!-- Pencil/Checkmark circle - smaller -->
         <path
             android:fillColor="#667eea"
-            android:pathData="M72,70 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" />
+            android:pathData="M60,68 m-8,0 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0" />
 
         <path
             android:fillColor="@android:color/transparent"
             android:strokeColor="#ffffff"
-            android:strokeWidth="2.5"
+            android:strokeWidth="2"
             android:strokeLineCap="round"
             android:strokeLineJoin="round"
-            android:pathData="M67,70 L70,73 L77,66" />
+            android:pathData="M56,68 L60,72 L66,64" />
     </group>
 </vector>
